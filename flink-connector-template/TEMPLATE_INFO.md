@@ -11,13 +11,13 @@ This template provides a complete, working scaffold for a Flink connector includ
 ### Implementation
 - ✅ **Factory** - Entry point for Flink's table API with configuration validation
 - ✅ **Table Source** - Implementation of ScanTableSource with limit pushdown
-- ✅ **Source Function** - Data reading/generation logic with resource management
+- ✅ **Source (Flink 2.x API)** - Data reading logic using the new Source API (mandatory in Flink 2.x)
 - ✅ **Lookup Function** - Optional support for temporal table joins
 - ✅ **Type Conversion Utils** - Utilities for converting data to Flink internal types
 
 ### Tests
 - ✅ **Factory Unit Tests** - Configuration validation and factory creation tests
-- ✅ **Source Function Unit Tests** - Data generation and type conversion tests
+- ✅ **Source Reader Unit Tests** - Data generation and type conversion tests
 - ✅ **Integration Tests** - End-to-end tests with Flink SQL
 
 ### Configuration
@@ -96,10 +96,17 @@ This template supports building:
 ## Prerequisites
 
 To use this template, you should have:
-- Java 11 or later
+- **Java 11 or later** (Java 17 is recommended for Flink 2.x)
 - Apache Maven 3.x
 - Basic understanding of Apache Flink
 - Familiarity with your data source/API
+
+**Important:** This template is built for **Apache Flink 2.1.1** and uses the new Source API (mandatory in Flink 2.x). Key differences from Flink 1.x:
+- `SourceFunction` has been removed → Use the new `Source` API
+- `DataSet` API has been removed → Use DataStream API or Table API/SQL
+- Java 8 is no longer supported → Minimum Java 11, recommended Java 17
+
+For migration from Flink 1.x, see the [Flink 2.0 Release Notes](https://nightlies.apache.org/flink/flink-docs-master/release-notes/flink-2.0/).
 
 ## Quick Example
 

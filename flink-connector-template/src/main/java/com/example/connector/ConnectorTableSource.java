@@ -55,23 +55,19 @@ public class ConnectorTableSource implements ScanTableSource, SupportsLimitPushD
 
   @Override
   public ScanRuntimeProvider getScanRuntimeProvider(final ScanContext scanContext) {
-    // TODO: Implement your data stream provider
+    // TODO: Implement your data stream provider using Flink 2.x Source API
     return new DataStreamScanProvider() {
       @Override
       public DataStream<RowData> produceDataStream(
           ProviderContext providerContext, StreamExecutionEnvironment env) {
 
-        // TODO: Create your custom source implementation
-        // Example: Reading from a custom source
-        ConnectorSourceFunction sourceFunction =
-            new ConnectorSourceFunction(endpoint, batchSize, types, schema);
+        // TODO: Create your custom source implementation using the new Source API
+        // The Source API (mandatory in Flink 2.x) provides better support for
+        // split discovery, watermarks, and event-time processing
+        ConnectorSource source =
+            new ConnectorSource(endpoint, batchSize, types, schema, limit);
 
-        if (limit > 0) {
-          sourceFunction.setLimit(limit);
-        }
-
-        return env.addSource(sourceFunction)
-            .name("{{CONNECTOR_NAME}} Source")
+        return env.fromSource(source, WatermarkStrategy.noWatermarks(), "{{CONNECTOR_NAME}} Source")
             .returns(
                 providerContext
                     .createTypeInformation(schema.toPhysicalRowDataType())

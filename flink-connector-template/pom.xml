@@ -13,8 +13,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <flink.version>1.17.0</flink.version>
+    <flink.version>2.1.1</flink.version>
     <!-- TODO: Add your connector-specific dependencies versions here -->
+    <!-- Java 11 is minimum, Java 17 is recommended for Flink 2.x -->
     <java.version>11</java.version>
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>

@@ -2,11 +2,13 @@
 
 This template provides a starting point for creating custom Apache Flink table connectors. It includes:
 
-- Template implementation classes for table sources
+- Template implementation classes for table sources using Flink 2.x Source API
 - Unit tests
 - Integration tests
 - Maven build configuration
 - Service loader configuration
+
+**Built for Apache Flink 2.1.1** | Requires Java 11+ (Java 17 recommended)
 
 ## Getting Started
 
@@ -65,16 +67,28 @@ Replace all placeholders throughout the project:
 4. Implement validation logic in `validateConfiguration()`
 5. Update `createDynamicTableSource()` to pass correct parameters
 
-#### B. Implement Data Source (ConnectorSourceFunction.java)
+#### B. Implement Data Source (Flink 2.x Source API)
 
-1. Add fields for your connector client/connection
-2. Initialize your connection in `open()` method
-3. Implement data reading logic in `run()` method:
-   - Fetch data from your source
-   - Convert to Flink's `RowData` format
-   - Emit records via `ctx.collect(row)`
-4. Implement proper type conversion in `convertToFlinkType()`
-5. Clean up resources in `close()` method
+The template uses the new Source API (mandatory in Flink 2.x). You'll need to implement:
+
+1. **ConnectorSource** - Main source interface:
+   - Define boundedness (bounded or unbounded)
+   - Create SourceReader and SplitEnumerator instances
+
+2. **ConnectorSourceReader** - Reads data from splits:
+   - Initialize connector client/connection
+   - Read data in `pollNext()` method
+   - Convert source data to `RowData` format
+   - Handle checkpointing via `snapshotState()`
+
+3. **ConnectorSplitEnumerator** - Manages split discovery and assignment:
+   - Discover splits from your source (files, partitions, etc.)
+   - Assign splits to readers
+   - Handle dynamic split discovery if needed
+
+4. **ConnectorSourceSplit** - Represents a portion of your data:
+   - Define what constitutes a split (file, partition, offset range, etc.)
+   - Make it serializable for checkpointing
 
 #### C. Implement Type Conversion (TypeConversionUtils.java)
 
@@ -99,10 +113,11 @@ If not needed, delete `ConnectorLookupFunction.java` and remove `LookupTableSour
 2. Add tests for your connector-specific configuration options
 3. Test validation logic for invalid configurations
 
-#### Unit Tests (ConnectorSourceFunctionTest.java)
-1. Test data reading/generation logic
+#### Unit Tests (ConnectorSourceReaderTest.java)
+1. Test split assignment and reading logic
 2. Test type conversion for all supported types
-3. Test error handling
+3. Test error handling and checkpointing
+4. Test split enumerator discovery logic
 
 #### Integration Tests (ConnectorIntegrationTest.java)
 1. Update DDL statements with your connector's configuration
@@ -167,7 +182,13 @@ flink-connector-template/
 │   │   ├── java/com/example/connector/
 │   │   │   ├── ConnectorTableSourceFactory.java    # Factory for creating table sources
 │   │   │   ├── ConnectorTableSource.java           # Table source implementation
-│   │   │   ├── ConnectorSourceFunction.java        # Data reading logic
+│   │   │   ├── ConnectorSource.java                # Source API implementation (Flink 2.x)
+│   │   │   ├── ConnectorSourceReader.java          # Reads data from splits
+│   │   │   ├── ConnectorSplitEnumerator.java       # Manages split discovery
+│   │   │   ├── ConnectorSourceSplit.java           # Represents a data split
+│   │   │   ├── ConnectorEnumeratorState.java       # Enumerator checkpoint state
+│   │   │   ├── ConnectorSourceSplitSerializer.java # Split serializer
+│   │   │   ├── ConnectorEnumeratorStateSerializer.java # State serializer
 │   │   │   ├── ConnectorLookupFunction.java        # Lookup join support (optional)
 │   │   │   └── TypeConversionUtils.java            # Type conversion utilities
 │   │   └── resources/
@@ -176,7 +197,7 @@ flink-connector-template/
 │   └── test/
 │       ├── java/com/example/connector/
 │       │   ├── ConnectorTableSourceFactoryTest.java    # Unit tests for factory
-│       │   ├── ConnectorSourceFunctionTest.java        # Unit tests for source function
+│       │   ├── ConnectorSourceFunctionTest.java        # Unit tests for source reader
 │       │   └── ConnectorIntegrationTest.java           # Integration tests
 │       └── resources/
 │           └── log4j2.properties                       # Test logging configuration
@@ -195,10 +216,12 @@ flink-connector-template/
 - Provides runtime providers (data stream or lookup function)
 - Can implement additional capabilities (limit pushdown, projection pushdown, etc.)
 
-### 3. Source Function (RichSourceFunction)
-- Contains the actual data reading logic
-- Converts source data to Flink's internal RowData format
-- Manages connections and resources
+### 3. Source (Flink 2.x Source API)
+- **ConnectorSource**: Entry point, defines boundedness and creates reader/enumerator
+- **ConnectorSourceReader**: Reads data from splits and converts to RowData format
+- **ConnectorSplitEnumerator**: Discovers and assigns splits to readers
+- **ConnectorSourceSplit**: Represents a portion of data (file, partition, offset range)
+- Provides better support for checkpointing, split discovery, and watermarks
 
 ### 4. Lookup Function (LookupFunction) - Optional
 - Implements lookup logic for dimension tables
