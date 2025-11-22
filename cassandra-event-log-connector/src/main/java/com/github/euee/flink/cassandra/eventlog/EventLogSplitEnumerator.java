@@ -94,15 +94,10 @@ public class EventLogSplitEnumerator
 
       if (!splitsForReader.isEmpty()) {
         LOG.info("Assigning {} splits to reader {}", splitsForReader.size(), readerId);
-        final int finalReaderId = readerId;
-        final List<EventLogSourceSplit> finalSplits = new ArrayList<>(splitsForReader);
+        java.util.Map<Integer, List<EventLogSourceSplit>> assignment =
+            java.util.Collections.singletonMap(readerId, splitsForReader);
         context.assignSplits(
-            new org.apache.flink.api.connector.source.SplitsAssignment<EventLogSourceSplit>() {
-              @Override
-              public java.util.Map<Integer, List<EventLogSourceSplit>> assignment() {
-                return java.util.Collections.singletonMap(finalReaderId, finalSplits);
-              }
-            });
+            new org.apache.flink.api.connector.source.SplitsAssignment<>(assignment));
       }
     }
 
