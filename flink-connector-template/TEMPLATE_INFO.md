@@ -96,7 +96,7 @@ This template supports building:
 ## Prerequisites
 
 To use this template, you should have:
-- Java 8 or later
+- Java 11 or later
 - Apache Maven 3.x
 - Basic understanding of Apache Flink
 - Familiarity with your data source/API
