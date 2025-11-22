@@ -50,7 +50,7 @@ public class EventLogTableSource implements ScanTableSource {
     return new DataStreamScanProvider() {
       @Override
       public DataStream<RowData> produceDataStream(
-          ProviderContext providerContext, StreamExecutionEnvironment execEnv) {
+          ScanContext scanContext, StreamExecutionEnvironment execEnv) {
         return execEnv.fromSource(
             source, WatermarkStrategy.noWatermarks(), "Cassandra Event Log Source");
       }

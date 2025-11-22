@@ -94,13 +94,23 @@ public class EventLogSplitEnumerator
 
       if (!splitsForReader.isEmpty()) {
         LOG.info("Assigning {} splits to reader {}", splitsForReader.size(), readerId);
-        context.assignSplits(new SplitsAssignment<>(splitsForReader, readerId));
+        final int finalReaderId = readerId;
+        final List<EventLogSourceSplit> finalSplits = new ArrayList<>(splitsForReader);
+        context.assignSplits(
+            new org.apache.flink.api.connector.source.SplitsAssignment<EventLogSourceSplit>() {
+              @Override
+              public java.util.Map<Integer, List<EventLogSourceSplit>> assignment() {
+                return java.util.Collections.singletonMap(finalReaderId, finalSplits);
+              }
+            });
       }
     }
 
     // Signal no more splits for unbounded source
     // (readers will continue polling their assigned shards indefinitely)
-    context.signalNoMoreSplits(context.registeredReaders());
+    for (int readerId : context.registeredReaders().keySet()) {
+      context.signalNoMoreSplits(readerId);
+    }
   }
 
   @Override
@@ -112,22 +122,5 @@ public class EventLogSplitEnumerator
   @Override
   public void close() throws IOException {
     // Nothing to close
-  }
-
-  /** Helper class for split assignment. */
-  private static class SplitsAssignment<SplitT>
-      implements org.apache.flink.api.connector.source.SplitsAssignment<SplitT> {
-    private final List<SplitT> splits;
-    private final int subtaskId;
-
-    SplitsAssignment(List<SplitT> splits, int subtaskId) {
-      this.splits = splits;
-      this.subtaskId = subtaskId;
-    }
-
-    @Override
-    public java.util.Map<Integer, List<SplitT>> assignment() {
-      return java.util.Collections.singletonMap(subtaskId, splits);
-    }
   }
 }
