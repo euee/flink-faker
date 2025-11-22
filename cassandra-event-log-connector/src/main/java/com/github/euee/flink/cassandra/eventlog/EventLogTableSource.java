@@ -50,7 +50,8 @@ public class EventLogTableSource implements ScanTableSource {
     return new DataStreamScanProvider() {
       @Override
       public DataStream<RowData> produceDataStream(
-          ScanContext scanContext, StreamExecutionEnvironment execEnv) {
+          org.apache.flink.table.connector.ProviderContext providerContext,
+          StreamExecutionEnvironment execEnv) {
         return execEnv.fromSource(
             source, WatermarkStrategy.noWatermarks(), "Cassandra Event Log Source");
       }
