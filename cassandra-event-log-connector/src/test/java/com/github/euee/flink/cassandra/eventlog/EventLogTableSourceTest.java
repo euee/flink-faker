@@ -63,10 +63,12 @@ class EventLogTableSourceTest {
     ScanTableSource.ScanRuntimeProvider provider = source.getScanRuntimeProvider(scanContext);
 
     assertThat(provider).isNotNull();
-    assertThat(provider).isInstanceOf(ScanTableSource.DataStreamScanProvider.class);
+    assertThat(provider)
+        .isInstanceOf(
+            org.apache.flink.table.connector.source.ScanTableSource.DataStreamScanProvider.class);
 
-    ScanTableSource.DataStreamScanProvider streamProvider =
-        (ScanTableSource.DataStreamScanProvider) provider;
+    org.apache.flink.table.connector.source.ScanTableSource.DataStreamScanProvider streamProvider =
+        (org.apache.flink.table.connector.source.ScanTableSource.DataStreamScanProvider) provider;
 
     // Verify it's unbounded
     assertThat(streamProvider.isBounded()).isFalse();
