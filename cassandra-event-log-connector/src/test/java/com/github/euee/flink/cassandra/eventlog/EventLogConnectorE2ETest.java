@@ -5,10 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.github.nosan.embedded.cassandra.Cassandra;
-import com.github.nosan.embedded.cassandra.CassandraBuilder;
-import com.github.nosan.embedded.cassandra.Settings;
 import java.net.InetSocketAddress;
+import org.cassandraunit.utils.EmbeddedCassandraServerHelper;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,30 +38,19 @@ class EventLogConnectorE2ETest {
       DateTimeFormatter.ofPattern("yyyy-MM-dd-HH");
   private static final String KEYSPACE = "test_events";
   private static final String TABLE = "event_log";
+  private static final int CASSANDRA_PORT = 9142; // Default CassandraUnit port
 
-  private static Cassandra cassandra;
   private static CqlSession session;
-  private static int cassandraPort;
 
   @BeforeAll
   static void setUpCassandra() throws Exception {
-    // Start embedded Cassandra
-    cassandra =
-        new CassandraBuilder()
-            .addEnvironmentVariable("CASSANDRA_START_RPC", "false")
-            .addSystemProperty("cassandra.skip_wait_for_gossip_to_settle", "0")
-            .addSystemProperty("cassandra.load_ring_state", "false")
-            .build();
-
-    cassandra.start();
-
-    Settings settings = cassandra.getSettings();
-    cassandraPort = settings.getPort();
+    // Start embedded Cassandra using CassandraUnit
+    EmbeddedCassandraServerHelper.startEmbeddedCassandra();
 
     // Connect to Cassandra
     session =
         CqlSession.builder()
-            .addContactPoint(new InetSocketAddress("127.0.0.1", cassandraPort))
+            .addContactPoint(new InetSocketAddress("127.0.0.1", CASSANDRA_PORT))
             .withLocalDatacenter("datacenter1")
             .build();
 
@@ -97,9 +84,7 @@ class EventLogConnectorE2ETest {
     if (session != null) {
       session.close();
     }
-    if (cassandra != null) {
-      cassandra.stop();
-    }
+    EmbeddedCassandraServerHelper.cleanEmbeddedCassandra();
   }
 
   private static void insertTestEvents() {
@@ -162,7 +147,7 @@ class EventLogConnectorE2ETest {
                 + "  'poll-interval-ms' = '1000',"
                 + "  'lookback-hours' = '1'"
                 + ")",
-            cassandraPort, KEYSPACE, TABLE);
+            CASSANDRA_PORT, KEYSPACE, TABLE);
 
     tableEnv.executeSql(createTableDDL);
 
@@ -225,7 +210,7 @@ class EventLogConnectorE2ETest {
                 + "  'num-shards' = '4',"
                 + "  'poll-interval-ms' = '500'"
                 + ")",
-            cassandraPort, KEYSPACE, TABLE);
+            CASSANDRA_PORT, KEYSPACE, TABLE);
 
     tableEnv.executeSql(createTableDDL);
 
@@ -276,7 +261,7 @@ class EventLogConnectorE2ETest {
                 + "  'table' = '%s',"
                 + "  'num-shards' = '4'"
                 + ")",
-            cassandraPort, KEYSPACE, TABLE);
+            CASSANDRA_PORT, KEYSPACE, TABLE);
 
     tableEnv.executeSql(createTableDDL);
 
