@@ -150,5 +150,11 @@ class EventLogTableSourceTest {
     public org.apache.flink.table.catalog.DataTypeFactory createDataTypeFactory() {
       return null;
     }
+
+    @Override
+    public org.apache.flink.table.data.conversion.DataStructureConverter<?, ?>
+        createDataStructureConverter(org.apache.flink.table.types.DataType dataType) {
+      return null;
+    }
   }
 }
